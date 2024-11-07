@@ -5,6 +5,7 @@ import { useGlobalConfigContext } from "@/features/global-config/global-client-c
 import { Loader, Send } from "lucide-react";
 import { FC, FormEvent, useRef } from "react";
 import { ChatFileSlider } from "../chat-file/chat-file-slider";
+import { ChatFileSlider_doc } from "../chat-file/chat-file-slider-doc";
 import { Microphone } from "../chat-speech/microphone";
 import { useChatInputDynamicHeight } from "./use-chat-input-dynamic-height";
 
@@ -24,6 +25,9 @@ const ChatInput: FC<Props> = (props) => {
   const fileCHatVisible =
     chatBody.chatType === "data" && chatBody.chatOverFileName;
 
+  const fileCHatVisible_doc =
+    chatBody.chatType === "doc" && chatBody.chatOverFileName;
+
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e);
@@ -38,10 +42,10 @@ const ChatInput: FC<Props> = (props) => {
   return (
     <form
       onSubmit={submit}
-      className="absolute bottom-0 w-full flex items-center"
-    >
+      className="bottom-0 flex flex-col justify-between "
+        >
       <div className="container mx-auto max-w-4xl relative py-2 flex gap-2 items-center">
-        {fileCHatVisible && <ChatFileSlider />}
+          {fileCHatVisible && <ChatFileSlider />}
         <Textarea
           rows={rows}
           value={input}

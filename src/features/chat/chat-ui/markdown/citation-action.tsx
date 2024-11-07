@@ -22,7 +22,7 @@ export const CitationAction = async (
       </div>
       <div className="border rounded-sm p-2">
         <div className="font-bold">File name</div>
-        <div>{firstResult.metadata} </div>
+        <div>{firstResult.metadata}</div>
       </div>
       <p>{firstResult.pageContent}</p>
     </div>
