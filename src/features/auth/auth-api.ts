@@ -104,7 +104,7 @@ export const options: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-/*
+ /* 
  cookies: {
    sessionToken: {
      name: `__Secure-next-auth.session-token`,
@@ -114,24 +114,7 @@ export const options: NextAuthOptions = {
        secure: true
      },
    },
-   callbackUrl: {
-    name: `__Secure-next-auth.callback-url`,
-    options: {
-      sameSite: 'lax',
-      path: '/',
-      secure: true
-    }
-    },
-    csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    },   
-  },
+ },
  useSecureCookies: process.env.NODE_ENV === "production",
 */
 cookies: {
@@ -162,7 +145,6 @@ cookies: {
     },
   },
 },
-
+ useSecureCookies: process.env.NODE_ENV === "production",
 };
-
 export const handlers = NextAuth(options);
