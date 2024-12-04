@@ -1,15 +1,30 @@
-
 import NextAuth, { NextAuthOptions } from "next-auth";
+import { Provider } from "next-auth/providers";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { hashValue } from "./helpers";
-import { Provider } from "next-auth/providers";
 
 const configureIdentityProvider = () => {
   const providers: Array<Provider> = [];
 
   const adminEmails = process.env.ADMIN_EMAIL_ADDRESS?.split(",").map(email => email.toLowerCase().trim());
+
+  if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+    providers.push(
+      GitHubProvider({
+        clientId: process.env.AUTH_GITHUB_ID!,
+        clientSecret: process.env.AUTH_GITHUB_SECRET!,
+        async profile(profile) {
+          const newProfile = {
+            ...profile,
+            isAdmin: adminEmails?.includes(profile.email.toLowerCase())
+          }
+          return newProfile;
+        }
+      })
+    );
+  }
 
   if (
     process.env.AZURE_AD_CLIENT_ID &&
@@ -21,17 +36,13 @@ const configureIdentityProvider = () => {
         clientId: process.env.AZURE_AD_CLIENT_ID!,
         clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
         tenantId: process.env.AZURE_AD_TENANT_ID!,
-        authorization: { 
-          params: { 
-            scope: "openid profile email" 
-          } 
-        },
-        // クロスオリジン対策
-        checks: ['pkce', 'state'],
         async profile(profile) {
+
           const newProfile = {
             ...profile,
+            // throws error without this - unsure of the root cause (https://stackoverflow.com/questions/76244244/profile-id-is-missing-in-google-oauth-profile-response-nextauth)
             id: profile.sub,
+            //isAdmin: adminEmails?.includes(profile.email.toLowerCase()) || adminEmails?.includes(profile.preferred_username.toLowerCase())
             isAdmin: adminEmails?.includes(profile.preferred_username.toLowerCase())
           }
           return newProfile;
@@ -40,81 +51,100 @@ const configureIdentityProvider = () => {
     );
   }
 
-  // 他のプロバイダー設定は省略
+  // If we're in local dev, add a basic credential provider option as well
+  // (Useful when a dev doesn't have access to create app registration in their tenant)
+  // This currently takes any username and makes a user with it, ignores password
+  // Refer to: https://next-auth.js.org/configuration/providers/credentials
+  if (process.env.NODE_ENV === "development") {
+    providers.push(
+      CredentialsProvider({
+        name: "localdev",
+        credentials: {
+          username: { label: "Username", type: "text", placeholder: "dev" },
+          password: { label: "Password", type: "password" },
+        },    
+        async authorize(credentials, req): Promise<any> {
+          // You can put logic here to validate the credentials and return a user.
+          // We're going to take any username and make a new user with it
+          // Create the id as the hash of the email as per userHashedId (helpers.ts)
+          const username = credentials?.username || "dev";
+          const email = username + "@localhost";
+          const user = {
+              id: hashValue(email),
+              name: username,
+              email: email,
+              isAdmin: true,
+              image: "",
+            };
+          console.log("=== DEV USER LOGGED IN:\n", JSON.stringify(user, null, 2));
+          return user;
+        }
+      })
+    );
+  }
+
   return providers;
 };
 
 export const options: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [...configureIdentityProvider()],
-  
-  // セキュリティ強化オプション
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30日
-  },
-  
-  // セキュリティコールバック
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      // リダイレクトを安全なドメインのみに制限
-      if (url.startsWith(baseUrl)) return url;
-      return baseUrl;
-    },
-    
-    async jwt({token, user, account, profile}) {
-      if (account?.provider === 'azure-ad') {
-        token.accessToken = account.access_token;
-        token.idToken = account.id_token;
-      }
-      
+    async jwt({token, user, account, profile, isNewUser, session}) {
       if (user?.isAdmin) {
-        token.isAdmin = user.isAdmin;
+       token.isAdmin = user.isAdmin
       }
-      
-      return token;
+      return token
     },
-    
-    async session({session, token}) {
-      session.user.isAdmin = token.isAdmin as string;
-      
-      // トークン情報の追加（オプション）
-      if (token.accessToken) {
-        session.accessToken = token.accessToken as string;
-      }
-      
-      return session;
+    async session({session, token, user }) {
+      session.user.isAdmin = token.isAdmin as string
+      return session
     }
   },
-  
-  // より厳格なCookie設定
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax', // 'none'から'lax'に変更
-        secure: process.env.NODE_ENV === 'production',
-      },
+  session: {
+    strategy: "jwt",
+  },
+ /* 
+ cookies: {
+   sessionToken: {
+     name: `__Secure-next-auth.session-token`,
+     options: {
+       httpOnly: true,
+       sameSite: "none",
+       secure: true
+     },
+   },
+ },
+ useSecureCookies: process.env.NODE_ENV === "production",
+*/
+cookies: {
+  sessionToken: {
+    name: `__Secure-next-auth.session-token`,
+    options: {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
     },
   },
-  
-  // エラーハンドリング
-  events: {
-    async signIn(message) {
-      console.log('Successful sign in', message);
-    },
-    async signOut(message) {
-      console.log('Sign out', message);
-    },
-    async createUser(message) {
-      console.log('User created', message);
+  callbackUrl: {
+    name: `__Secure-next-auth.callback-url`,
+    options: {
+      path: '/',
+      sameSite: 'none',
+      secure: true,
     },
   },
-  
-  // デバッグモード（本番環境では無効に）
-  debug: process.env.NODE_ENV === 'development',
+  csrfToken: {
+    name: `__Host-next-auth.csrf-token`,
+    options: {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    },
+  },
+},
+ useSecureCookies: process.env.NODE_ENV === "production",
 };
-
 export const handlers = NextAuth(options);
