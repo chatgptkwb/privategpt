@@ -12,6 +12,17 @@ import {
 } from "../ui/card";
 
 export const LogIn = () => {
+  const handleAzureLogin = () => {
+    // クロスオリジン、iFrame対応のログインオプション
+    signIn("azure-ad", {
+      redirect: true,
+      callbackUrl: window.location.origin, // 現在のオリジンにリダイレクト
+    }, {
+      prompt: 'select_account', // アカウント選択プロンプト
+      // 必要に応じて追加のパラメータ
+    });
+  };
+
   return (
     <Card className="flex gap-2 flex-col min-w-[300px]">
       <CardHeader className="gap-2">
@@ -26,14 +37,13 @@ export const LogIn = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <Button onClick={() => signIn("azure-ad")}> Azure Entraでログイン</Button>
+        <Button onClick={handleAzureLogin}>Azure Entraでログイン</Button>
         {process.env.NODE_ENV === "development" && (
           <Button onClick={() => signIn("localdev")}>Basic Auth (DEV ONLY)</Button>
-          )}
+        )}
         {process.env.NODE_ENV === "development" && (
           <Button onClick={() => signIn("github")}>GitHub</Button>
-          )}
-
+        )}
       </CardContent>
     </Card>
   );

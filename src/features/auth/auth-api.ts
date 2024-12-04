@@ -36,13 +36,15 @@ const configureIdentityProvider = () => {
         clientId: process.env.AZURE_AD_CLIENT_ID!,
         clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
         tenantId: process.env.AZURE_AD_TENANT_ID!,
+        authorization: { 
+          params: { 
+            scope: "openid profile email" 
+          } 
+        },
         async profile(profile) {
-
           const newProfile = {
             ...profile,
-            // throws error without this - unsure of the root cause (https://stackoverflow.com/questions/76244244/profile-id-is-missing-in-google-oauth-profile-response-nextauth)
             id: profile.sub,
-            //isAdmin: adminEmails?.includes(profile.email.toLowerCase()) || adminEmails?.includes(profile.preferred_username.toLowerCase())
             isAdmin: adminEmails?.includes(profile.preferred_username.toLowerCase())
           }
           return newProfile;
@@ -51,10 +53,7 @@ const configureIdentityProvider = () => {
     );
   }
 
-  // If we're in local dev, add a basic credential provider option as well
-  // (Useful when a dev doesn't have access to create app registration in their tenant)
-  // This currently takes any username and makes a user with it, ignores password
-  // Refer to: https://next-auth.js.org/configuration/providers/credentials
+  // Local development credentials provider remains the same
   if (process.env.NODE_ENV === "development") {
     providers.push(
       CredentialsProvider({
@@ -64,9 +63,6 @@ const configureIdentityProvider = () => {
           password: { label: "Password", type: "password" },
         },    
         async authorize(credentials, req): Promise<any> {
-          // You can put logic here to validate the credentials and return a user.
-          // We're going to take any username and make a new user with it
-          // Create the id as the hash of the email as per userHashedId (helpers.ts)
           const username = credentials?.username || "dev";
           const email = username + "@localhost";
           const user = {
@@ -104,47 +100,39 @@ export const options: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
- /* 
- cookies: {
-   sessionToken: {
-     name: `__Secure-next-auth.session-token`,
-     options: {
-       httpOnly: true,
-       sameSite: "none",
-       secure: true
-     },
-   },
- },
- useSecureCookies: process.env.NODE_ENV === "production",
-*/
-cookies: {
-  sessionToken: {
-    name: `__Secure-next-auth.session-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'none', // クロスサイト、iFrame対応
+        secure: true,     // HTTPSのみ
+        partitioned: true // Partitionedクッキーでサードパーティコンテキストをサポート
+      },
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        path: '/',
+        sameSite: 'none',
+        secure: true,
+        partitioned: true
+      },
+    },
+    csrfToken: {
+      name: `__Host-next-auth.csrf-token`,
+      options: {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        partitioned: true
+      },
     },
   },
-  callbackUrl: {
-    name: `__Secure-next-auth.callback-url`,
-    options: {
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-  csrfToken: {
-    name: `__Host-next-auth.csrf-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-},
- useSecureCookies: process.env.NODE_ENV === "production",
+  useSecureCookies: true, // セキュアクッキーを強制
+//  useSecureCookies: process.env.NODE_ENV === "production",
 };
+
 export const handlers = NextAuth(options);
