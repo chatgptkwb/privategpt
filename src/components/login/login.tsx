@@ -41,7 +41,7 @@ export const LogIn = () => {
           window.self !== window.top || 
           window.parent !== window.self || 
           window !== window.top ||
-          // Check for cross-origin iframe
+          // Additional cross-origin iframe check
           (window.location !== window.parent.location);
 
         setIsIframe(isInIframe);
@@ -64,15 +64,8 @@ export const LogIn = () => {
   // Handle login for browsers requiring first-party context
   const handleIframeLogin = () => {
     try {
-      // More robust parent URL retrieval
-      const parentUrl = window.parent ? 
-        window.parent.location.href : 
-        window.top?.location.href || 
-        window.location.href;
-      
-      const encodedParentUrl = encodeURIComponent(parentUrl);
-      
-      const loginUrl = `${process.env.NEXT_PUBLIC_URL}/login?callbackUrl=${encodedParentUrl}`;
+      // Use a predefined, absolute login URL
+      const loginUrl = `${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}`;
       
       // Attempt to open login in a new window/tab
       const newWindow = window.open(loginUrl, '_blank', 'noopener,noreferrer');
@@ -94,36 +87,59 @@ export const LogIn = () => {
 
   // Loading state
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return <div>読み込み中...</div>;
+  }
+
+  // User already logged in
+  if (session) {
+    return null;
   }
 
   return (
     <Card className="flex gap-2 flex-col min-w-[300px]">
       <CardHeader className="gap-2">
-        <CardTitle className="text-2xl flex gap-2">
+        <CardTitle className="text-2xl flex gap-2 items-center">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={"ai-icon.png"} />
+            <AvatarImage 
+              src={"/ai-icon.png"} 
+              alt={`${AI_NAME} アイコン`}
+            />
           </Avatar>
           <span className="text-primary">{AI_NAME}</span>
         </CardTitle>
         <CardDescription>
-        Azure Entraでログインをしてください。
+          Azure Entraでログインをしてください。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isIframe? (
+        {isIframe && needsFirstPartyContext.includes(browser) ? (
           // Special login button for problematic browsers in iframe
-          <Button onClick={handleIframeLogin}>
-            別画面が起動しログインを行います
+          <Button onClick={handleIframeLogin} variant="default">
+            初回のみ別画面が起動します
           </Button>
         ) : (
           // Normal login buttons
           <>
-            <Button onClick={() => signIn("azure-ad")}> Azure Entraでログイン</Button>
+            <Button 
+              onClick={() => signIn("azure-ad")}
+              variant="default"
+            > 
+              Azure Entraでログイン
+            </Button>
             {process.env.NODE_ENV === "development" && (
               <>
-                <Button onClick={() => signIn("localdev")}>Basic Auth (DEV ONLY)</Button>
-                <Button onClick={() => signIn("github")}>GitHub</Button>
+                <Button 
+                  onClick={() => signIn("localdev")}
+                  variant="secondary"
+                >
+                  Basic Auth (開発環境専用)
+                </Button>
+                <Button 
+                  onClick={() => signIn("github")}
+                  variant="outline"
+                >
+                  GitHubでログイン
+                </Button>
               </>
             )}
           </>
