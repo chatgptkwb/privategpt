@@ -16,13 +16,13 @@ import { useState, useEffect } from "react";
 const detectBrowser = (): string => {
   if (typeof window === 'undefined') return 'Unknown';
 
-  const userAgent = window.navigator.userAgent;
-  if (userAgent.indexOf('Firefox') > -1) return 'Firefox';
-  if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) return 'Opera';
-  if (userAgent.indexOf('Trident') > -1) return 'Internet Explorer';
-  if (userAgent.indexOf('Edge') > -1) return 'Edge';
-  if (userAgent.indexOf('Chrome') > -1) return 'Chrome';
-  if (userAgent.indexOf('Safari') > -1) return 'Safari';
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  if (userAgent.includes('firefox')) return 'Firefox';
+  if (userAgent.includes('opr') || userAgent.includes('opera')) return 'Opera';
+  if (userAgent.includes('trident')) return 'Internet Explorer';
+  if (userAgent.includes('edg')) return 'Edge';
+  if (userAgent.includes('chrome')) return 'Chrome';
+  if (userAgent.includes('safari')) return 'Safari';
   
   return 'Unknown';
 };
@@ -33,27 +33,59 @@ export const LogIn = () => {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Check if the current window is inside an iframe
-    setIsIframe(window.self !== window.top);
-    
-    // Detect browser
-    setBrowser(detectBrowser());
+    // Comprehensive iframe detection
+    const checkIframe = () => {
+      try {
+        // Multiple methods to detect iframe
+        const isInIframe = 
+          window.self !== window.top || 
+          window.parent !== window.self || 
+          window !== window.top ||
+          // Check for cross-origin iframe
+          (window.location !== window.parent.location);
+
+        setIsIframe(isInIframe);
+        
+        // Detect browser
+        setBrowser(detectBrowser());
+      } catch (error) {
+        // If there's an error accessing parent window, assume it's in an iframe
+        setIsIframe(true);
+        setBrowser(detectBrowser());
+      }
+    };
+
+    // Check immediately if window is available
+    if (typeof window !== 'undefined') {
+      checkIframe();
+    }
   }, []);
 
   // Handle login for browsers requiring first-party context
   const handleIframeLogin = () => {
-    // Open login in a new tab with the current parent page URL as redirect
-    const parentUrl = window.parent.location.href;
-    const encodedParentUrl = encodeURIComponent(parentUrl);
-    
-    const loginUrl = `${process.env.NEXT_PUBLIC_URL}/login?callbackUrl=${encodedParentUrl}`;
-    const newWindow = window.open(loginUrl, '_blank');
-    alert(loginUrl);
-    
     try {
-      newWindow?.focus();
-    } catch {
-      alert('Pop-up Blocker is enabled! Please add this site to your exception list.');
+      // More robust parent URL retrieval
+      const parentUrl = window.parent ? 
+        window.parent.location.href : 
+        window.top?.location.href || 
+        window.location.href;
+      
+      const encodedParentUrl = encodeURIComponent(parentUrl);
+      
+      const loginUrl = `${process.env.NEXT_PUBLIC_URL}/login?callbackUrl=${encodedParentUrl}`;
+      
+      // Attempt to open login in a new window/tab
+      const newWindow = window.open(loginUrl, '_blank', 'noopener,noreferrer');
+      
+      if (newWindow) {
+        newWindow.focus();
+      } else {
+        // Fallback error handling for popup blockers
+        alert('ログインウィンドウを開けませんでした。ポップアップブロックを解除してください。');
+      }
+    } catch (error) {
+      console.error('Login window open failed:', error);
+      alert('ログイン処理中にエラーが発生しました。');
     }
   };
 
@@ -75,7 +107,7 @@ export const LogIn = () => {
           <span className="text-primary">{AI_NAME}</span>
         </CardTitle>
         <CardDescription>
-        Azure Entraでログインをしてください。{isIframe}
+        Azure Entraでログインをしてください。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -88,9 +120,6 @@ export const LogIn = () => {
           // Normal login buttons
           <>
             <Button onClick={() => signIn("azure-ad")}> Azure Entraでログイン</Button>
-            <Button onClick={handleIframeLogin}>
-            別画面が起動しログインを行います
-            </Button>
             {process.env.NODE_ENV === "development" && (
               <>
                 <Button onClick={() => signIn("localdev")}>Basic Auth (DEV ONLY)</Button>
