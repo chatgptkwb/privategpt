@@ -112,7 +112,7 @@ export const LogIn = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isIframe && needsFirstPartyContext.includes(browser) ? (
+        {isIframe  ? (
           // Special login button for problematic browsers in iframe
           <Button onClick={handleIframeLogin} variant="default">
             初回のみ別画面が起動します
