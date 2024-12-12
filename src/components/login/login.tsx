@@ -48,6 +48,7 @@ export const LogIn = () => {
     
     const loginUrl = `${process.env.NEXT_PUBLIC_URL}/login?callbackUrl=${encodedParentUrl}`;
     const newWindow = window.open(loginUrl, '_blank');
+    alert(loginUrl);
     
     try {
       newWindow?.focus();
