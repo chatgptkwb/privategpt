@@ -74,7 +74,7 @@ export const LogIn = () => {
           <span className="text-primary">{AI_NAME}</span>
         </CardTitle>
         <CardDescription>
-        Azure Entraでログインをしてください。
+        Azure Entraでログインをしてください。{isIframe}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -87,6 +87,9 @@ export const LogIn = () => {
           // Normal login buttons
           <>
             <Button onClick={() => signIn("azure-ad")}> Azure Entraでログイン</Button>
+            <Button onClick={handleIframeLogin}>
+            別画面が起動しログインを行います
+            </Button>
             {process.env.NODE_ENV === "development" && (
               <>
                 <Button onClick={() => signIn("localdev")}>Basic Auth (DEV ONLY)</Button>
