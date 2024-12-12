@@ -86,10 +86,10 @@ export const LogIn = () => {
   const handleIframeLogin = () => {
     try {
       // Construct login URL with additional parameters
-      const loginUrl = new URL(`${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}/login`);
+      const loginUrl = new URL(`${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}`);
       
       // Add any necessary query parameters
-      loginUrl.searchParams.append('iframe', 'true');
+      //loginUrl.searchParams.append('iframe', 'true');
       
       // Attempt to open login in a new window/tab
       const newWindow = window.open(loginUrl.toString(), '_blank', 'noopener,noreferrer');
