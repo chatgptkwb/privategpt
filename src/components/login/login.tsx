@@ -30,6 +30,7 @@ const detectBrowser = (): string => {
 export const LogIn = () => {
   const [isIframe, setIsIframe] = useState(false);
   const [browser, setBrowser] = useState('Unknown');
+  const [loginStage, setLoginStage] = useState<'initial' | 'opened' | 'ready-to-refresh'>('initial');
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -58,27 +59,59 @@ export const LogIn = () => {
     // Check immediately if window is available
     if (typeof window !== 'undefined') {
       checkIframe();
+
+      // Listen for postMessage from the login window
+      const handleMessage = (event: MessageEvent) => {
+        // Verify the message is from a trusted source
+        const loginUrl = `${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}`;
+        if (event.origin !== new URL(loginUrl).origin) return;
+
+        // Check for login success message
+        if (event.data === 'login_success') {
+          // Update login stage
+          setLoginStage('ready-to-refresh');
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Cleanup listener
+      return () => {
+        window.removeEventListener('message', handleMessage);
+      };
     }
   }, []);
 
   // Handle login for browsers requiring first-party context
   const handleIframeLogin = () => {
     try {
-      // Use a predefined, absolute login URL
-      const loginUrl = `${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}`;
+      // Construct login URL with additional parameters
+      const loginUrl = new URL(`${process.env.NEXT_PUBLIC_URL || 'https://kashiwabaragpt.azurewebsites.net'}/login`);
+      
+      // Add any necessary query parameters
+      loginUrl.searchParams.append('iframe', 'true');
       
       // Attempt to open login in a new window/tab
-      const newWindow = window.open(loginUrl, '_blank', 'noopener,noreferrer');
+      const newWindow = window.open(loginUrl.toString(), '_blank', 'noopener,noreferrer');
       
       if (newWindow) {
         newWindow.focus();
+        // Update login stage
+        setLoginStage('opened');
       } else {
         // Fallback error handling for popup blockers
-        alert('ログインウィンドウを開けませんでした。ポップアップブロックを解除してください。');
+        alert('ポップアップがブロックされました。ブラウザの設定を確認してください。');
       }
     } catch (error) {
       console.error('Login window open failed:', error);
       alert('ログイン処理中にエラーが発生しました。');
+    }
+  };
+
+  // Handle page refresh
+  const handleRefresh = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
     }
   };
 
@@ -112,11 +145,20 @@ export const LogIn = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isIframe  ? (
-          // Special login button for problematic browsers in iframe
-          <Button onClick={handleIframeLogin} variant="default">
-            初回のみ別画面が起動します
-          </Button>
+        {isIframe && needsFirstPartyContext.includes(browser) ? (
+          loginStage === 'initial' ? (
+            <Button onClick={handleIframeLogin} variant="default">
+              初回のみ別画面が起動します
+            </Button>
+          ) : loginStage === 'opened' ? (
+            <Button variant="secondary" disabled>
+              ログイン処理中...
+            </Button>
+          ) : (
+            <Button onClick={handleRefresh} variant="default">
+              画面を更新します
+            </Button>
+          )
         ) : (
           // Normal login buttons
           <>
