@@ -100,7 +100,7 @@ export const LogIn = () => {
         setLoginStage('opened');
       } else {
         // Fallback error handling for popup blockers
-        alert('ポップアップがブロックされました。ブラウザの設定を確認してください。');
+        alert('ログインが完了しましたらブラウザの更新ボタンをクリックしてください');
       }
     } catch (error) {
       console.error('Login window open failed:', error);
@@ -145,7 +145,7 @@ export const LogIn = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isIframe && needsFirstPartyContext.includes(browser) ? (
+        {isIframe  ? (
           loginStage === 'initial' ? (
             <Button onClick={handleIframeLogin} variant="default">
               初回のみ別画面が起動します
