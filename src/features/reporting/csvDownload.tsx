@@ -1,7 +1,31 @@
 "use client"
 import { Button } from "@/components/ui/button";
-import { CSVLink } from "react-csv";
-import { ChatThreadModel } from "../chat/chat-services/models";
+import {useRef} from "react";
+import { CSVLink,CSVDownload } from "react-csv" ;
+import { SqlQuerySpec } from "@azure/cosmos";
+import ChatRow from "@/components/chat/chat-row";
+import { useState } from "react";
+
+//フェッチの完了を判断するステート(完了後に true とする)
+import { FindAllChatThreadsForReporting } from "./reporting-service";
+
+export type ReportingProp = {
+  searchParams: {
+    pageSize?: number;
+    pageNumber?: number;
+  };
+};
+
+//const [fetchDone, setFetchDone] = useState(false);
+
+
+import {
+  CHAT_THREAD_ATTRIBUTE,
+  ChatMessageModel,
+  ChatThreadModel,
+  MESSAGE_ATTRIBUTE,
+} from "../chat/chat-services/models";
+import { CosmosDBContainer } from "../common/cosmos";
 
 const headers = [
   { label: "会話日時", key: "createdAt" },
@@ -9,44 +33,32 @@ const headers = [
   { label: "タイトル", key: "name" },
   { label: "スレッドID", key: "id" }
 ];
+ 
 
-const formatToJST = (date: Date) => {
-  const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-  return {
-    date: jstDate.toLocaleDateString("ja-JP"),
-    time: jstDate.toLocaleTimeString("ja-JP")
-  };
-};
+//  function Download () {
+  const Download :  React.FC<Props> = (props) => {
+    const data = props.resources;
+      return  <CSVLink data={data} headers={headers}><Button >CSVダウンロード</Button></CSVLink>
+      //return  <CSVLink data={data} ><Button >CSVダウンロード!</Button></CSVLink>
+    
 
+    // return
+}   
+  
 interface Props {
   resources: Array<ChatThreadModel>;
 }
 
-const Download: React.FC<Props> = (props) => {
-  // データを変換して新しい配列を作成
-  const convertedData = props.resources.map(thread => {
-    const jstDateTime = formatToJST(new Date(thread.createdAt));
-    return {
-      ...thread,
-      createdAt: `${jstDateTime.date} ${jstDateTime.time}` // 日付と時間を結合
-    };
-  });
+  const  DownloadCSV :  React.FC<Props> = (props) => {
 
-  return (
-    <CSVLink data={convertedData} headers={headers}>
-      <Button>CSVダウンロード</Button>
-    </CSVLink>
-  );
-};
-
-const DownloadCSV: React.FC<Props> = (props) => {
-  return (
-    <main>
-      <div>
+    return (
+      <main>
+        <div>
         <Download {...props} />
+        </div>
+        <div>
       </div>
-    </main>
-  );
-};
-
+      </main>
+    );
+  }
 export default DownloadCSV;
