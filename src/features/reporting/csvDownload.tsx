@@ -10,8 +10,7 @@ const headers = [
   { label: "スレッドID", key: "id" }
 ];
 
-const formatToJST = (dateString: string) => {
-  const date = new Date(dateString);
+const formatToJST = (date: Date) => {
   const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
   return {
     date: jstDate.toLocaleDateString("ja-JP"),

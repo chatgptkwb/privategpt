@@ -94,7 +94,7 @@ export const ChatAPIWeb = async (props: PromptGPTProps) => {
       messages: [
         {
           role: "system",
-          content: `あなたは ${AI_NAME} です。ユーザーからの質問に対して日本語で丁寧に回答します。
+          content: `あなたは ${process.env.NEXT_PUBLIC_AI_NAME} です。ユーザーからの質問に対して日本語で丁寧に回答します。
           - 質問には正直かつ正確に答えます。`,
         },
         {

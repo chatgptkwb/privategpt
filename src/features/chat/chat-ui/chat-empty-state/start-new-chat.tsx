@@ -1,6 +1,5 @@
 import Typography from "@/components/typography";
 import { Card } from "@/components/ui/card";
-import { AI_NAME } from "@/features/theme/customise";
 import { FC } from "react";
 import { NewChat } from "../../chat-menu/new-chat";
 
@@ -14,13 +13,11 @@ export const StartNewChat: FC<Prop> = (props) => {
       </div>
       <Card className="col-span-3 flex flex-col gap-5 p-5 ">
         <Typography variant="h4" className="text-primary">
-        {AI_NAME}にようこそ！
+        {process.env.NEXT_PUBLIC_AI_NAME}にようこそ！
         </Typography>
         <div className="flex flex-col gap-2">
           <p className="text-sm text-muted-foreground">
-          このChatGPT搭載のAIチャットボットは、社内利用限定で公開されています。
-            まだまだ未熟なAIですが、皆様のご協力により、AIの成長を目指しています。
-
+          {process.env.NEXT_PUBLIC_AI_WELCOME_MSG_JA}
           </p>
           <p>下記の➕を押して会話を開始できます</p>
         </div>

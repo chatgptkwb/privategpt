@@ -1,13 +1,12 @@
 import { userHashedId } from "@/features/auth/helpers";
 import { OpenAIInstance } from "@/features/common/openai";
-import { AI_NAME } from "@/features/theme/customise";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { similaritySearchVectorWithScore } from "./azure-cog-search/azure-cog-vector-store";
 import { initAndGuardChatSession } from "./chat-thread-service";
 import { CosmosDBChatMessageHistory } from "./cosmosdb/cosmosdb";
 import { PromptGPTProps } from "./models";
 
-const SYSTEM_PROMPT = `あなたは ${AI_NAME}です。ユーザーからの質問に対して日本語で丁寧に回答します。 \n`;
+const SYSTEM_PROMPT = `あなたは ${process.env.NEXT_PUBLIC_AI_NAME}です。ユーザーからの質問に対して日本語で丁寧に回答します。 \n`;
 
 const CONTEXT_PROMPT = ({
   context,

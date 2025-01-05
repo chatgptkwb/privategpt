@@ -1,5 +1,4 @@
 "use client";
-import { AI_NAME } from "@/features/theme/customise";
 import { signIn, useSession } from "next-auth/react";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -135,10 +134,9 @@ export const LogIn = () => {
           <Avatar className="h-8 w-8">
             <AvatarImage 
               src={"/ai-icon.png"} 
-              alt={`${AI_NAME} アイコン`}
             />
           </Avatar>
-          <span className="text-primary">{AI_NAME}</span>
+          <span className="text-primary">{process.env.NEXT_PUBLIC_AI_NAME}</span>
         </CardTitle>
         <CardDescription>
           Azure Entraでログインをしてください。
