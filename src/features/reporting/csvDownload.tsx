@@ -10,7 +10,8 @@ const headers = [
   { label: "スレッドID", key: "id" }
 ];
 
-const formatToJST = (date: Date) => {
+const formatToJST = (dateString: string) => {
+  const date = new Date(dateString);
   const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
   return {
     date: jstDate.toLocaleDateString("ja-JP"),
@@ -25,10 +26,10 @@ interface Props {
 const DownloadCSV: React.FC<Props> = (props) => {
   // データを変換して新しい配列を作成
   const convertedData = props.resources.map(thread => {
-    const jstDateTime = formatToJST(new Date(thread.createdAt));
+    const jstDateTime = formatToJST(thread.createdAt);
     return {
       ...thread,
-      createdAt: `${jstDateTime.date} ${jstDateTime.time}` // 日付と時間を結合
+      createdAt: `${jstDateTime.date} ${jstDateTime.time}`
     };
   });
 
