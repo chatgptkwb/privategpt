@@ -35,7 +35,13 @@ export const Reporting = async (props: ReportingProp) => {
   const { resources: chatThreads_all } = await FindAllChat();
 
   const hasMoreResults = chatThreads && chatThreads.length === pageSize;
-
+  const formatToJST = (date: Date) => {
+    const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+    return {
+      date: jstDate.toLocaleDateString("ja-JP"),
+      time: jstDate.toLocaleTimeString("ja-JP")
+    };
+  };
   return (
     <Card className="h-full flex pt-8 overflow-y-auto">
       <div className="container mx-auto max-w-5xl space-y-8">
@@ -60,10 +66,14 @@ export const Reporting = async (props: ReportingProp) => {
                   chatThreads.map((chatThread) => (
                     <TableRow key={chatThread.id}>
                       <TableCell>
-                      <Link href={"/reporting/" + chatThread.id}>
-                        {new Date(chatThread.createdAt).toLocaleDateString("ja-JP")}  {new Date(chatThread.createdAt).toLocaleTimeString()}
-                      </Link>
+                        <Link href={"/reporting/" + chatThread.id}>
+                          {(() => {
+                            const jst = formatToJST(new Date(chatThread.createdAt));
+                            return `${jst.date} ${jst.time}`;
+                          })()}
+                        </Link>
                       </TableCell>
+
                       <TableCell>
                       <Link href={"/reporting/" + chatThread.id}>
                         {chatThread.useName}
