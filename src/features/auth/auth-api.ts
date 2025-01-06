@@ -117,6 +117,7 @@ export const options: NextAuthOptions = {
  },
  useSecureCookies: process.env.NODE_ENV === "production",
 */
+
 cookies: {
   sessionToken: {
     name: `__Secure-next-auth.session-token`,
@@ -145,6 +146,7 @@ cookies: {
     },
   },
 },
+
  useSecureCookies: process.env.NODE_ENV === "production",
 };
 export const handlers = NextAuth(options);
