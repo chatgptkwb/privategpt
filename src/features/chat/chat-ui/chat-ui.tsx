@@ -54,7 +54,6 @@ export const ChatUI: FC<Prop> = () => {
     <div className="h-full relative overflow-auto flex-1 bg-card rounded-md shadow-md">
     <Tabs value={value} onChange={handleChange} aria-label="設定画面">
       <Tab icon={<MessageCircle />} label="チャット画面" {...a11yProps(0)} />
-      <Tab icon={<Lightbulb />} label="プロンプト集" {...a11yProps(1)} />
     </Tabs>
 
   <CustomTabPanel value={value} index={0}>

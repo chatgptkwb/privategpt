@@ -291,19 +291,6 @@ const ChatPromptEmptyState: FC<Props> = (props) => {
               value={promptTitle==="" ? "" : promptTitle}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => titleChange(e.target.value)}
             ></textarea>
-          <Button
-            variant={"ghost"}
-            size={"sm"}
-            title="Copy text"
-            className="justify-right flex"
-            onClick={handleButtonClick}
-          >
-            {isIconChecked ? (
-              <CheckIcon size={16} />
-            ) : (
-              <ClipboardIcon size={16} />
-            )}
-          </Button>            
           </div>
           </p>
           <p className="text-xs text-muted-foreground">

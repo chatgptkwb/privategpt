@@ -60,19 +60,6 @@ const ChatRow: FC<ChatRowProps> = (props) => {
               {props.name}
             </Typography>
           </div>
-          <Button
-            variant={"ghost"}
-            size={"sm"}
-            title="Copy text"
-            className="justify-right flex"
-            onClick={handleButtonClick}
-          >
-            {isIconChecked ? (
-              <CheckIcon size={16} />
-            ) : (
-              <ClipboardIcon size={16} />
-            )}
-          </Button>
         </div>
 
         <div

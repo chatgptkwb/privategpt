@@ -104,48 +104,48 @@ export const options: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
- /* 
- cookies: {
-   sessionToken: {
-     name: `__Secure-next-auth.session-token`,
-     options: {
-       httpOnly: true,
-       sameSite: "none",
-       secure: true
-     },
-   },
- },
- useSecureCookies: process.env.NODE_ENV === "production",
-*/
+ 
+//  cookies: {
+//    sessionToken: {
+//      name: `__Secure-next-auth.session-token`,
+//      options: {
+//        httpOnly: true,
+//        sameSite: "none",
+//        secure: true
+//      },
+//    },
+//  },
+//  useSecureCookies: process.env.NODE_ENV === "production",
 
-cookies: {
-  sessionToken: {
-    name: `__Secure-next-auth.session-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-  callbackUrl: {
-    name: `__Secure-next-auth.callback-url`,
-    options: {
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-  csrfToken: {
-    name: `__Host-next-auth.csrf-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-},
+
+// cookies: {
+//   sessionToken: {
+//     name: `__Secure-next-auth.session-token`,
+//     options: {
+//       path: '/',
+//       httpOnly: true,
+//       sameSite: 'none',
+//       secure: true,
+//     },
+//   },
+//   callbackUrl: {
+//     name: `__Secure-next-auth.callback-url`,
+//     options: {
+//       path: '/',
+//       sameSite: 'none',
+//       secure: true,
+//     },
+//   },
+//   csrfToken: {
+//     name: `__Host-next-auth.csrf-token`,
+//     options: {
+//       path: '/',
+//       httpOnly: true,
+//       sameSite: 'none',
+//       secure: true,
+//     },
+//   },
+// },
 
  useSecureCookies: process.env.NODE_ENV === "production",
 };
