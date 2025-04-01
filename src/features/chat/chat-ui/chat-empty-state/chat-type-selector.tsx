@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, MessageCircle, File, Globe } from "lucide-react";
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import { ChatType } from "../../chat-services/models";
 import { useChatContext } from "../chat-context";
 import { useSession } from "next-auth/react";
@@ -12,13 +12,22 @@ interface Prop {
 export const ChatTypeSelector: FC<Prop> = (props) => {
   const { data: session } = useSession();
   const { chatBody, onChatTypeChange } = useChatContext();
+  const [showFAQ, setShowFAQ] = useState(false);
+  
+  useEffect(() => {
+    // 環境変数から直接読み込むか、セッション情報から判断
+    const faqEnabled = process.env.NEXT_PUBLIC_FAQ === 'True';
+    // セッション情報がある場合は、ユーザーの権限などに基づいて判断することも可能
+    // 例: const faqEnabled = session?.user?.isAdmin || false;
+    setShowFAQ(faqEnabled);
+  }, [session]);
 
   return (
     <Tabs
       defaultValue={chatBody.chatType}
       onValueChange={(value) => onChatTypeChange(value as ChatType)}
     >
-      <TabsList className={`grid w-full ${process.env.NEXT_PUBLIC_FAQ === 'True' ? 'grid-cols-4' : 'grid-cols-3'} h-12 items-stretch`}>
+      <TabsList className={`grid w-full ${showFAQ ? 'grid-cols-4' : 'grid-cols-3'} h-12 items-stretch`}>
         <TabsTrigger
           value="simple"
           className="flex gap-1"
@@ -38,9 +47,9 @@ export const ChatTypeSelector: FC<Prop> = (props) => {
           className="flex gap-1"
           disabled={props.disable}
         >
-          <FileText size={20} /> 文書要約 #{process.env.NEXT_PUBLIC_FAQ} #
+          <FileText size={20} /> 文書要約
         </TabsTrigger>              
-        {process.env.NEXT_PUBLIC_FAQ === 'True' && (
+        {showFAQ && (
           <TabsTrigger
             value="doc"
             className="flex gap-1"
