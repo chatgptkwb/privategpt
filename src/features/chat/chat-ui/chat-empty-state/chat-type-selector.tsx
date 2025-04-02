@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, MessageCircle, File, Globe } from "lucide-react";
-import { FC, useEffect, useState } from "react";
+import { FC } from "react";
 import { ChatType } from "../../chat-services/models";
 import { useChatContext } from "../chat-context";
 import { useSession } from "next-auth/react";
@@ -12,15 +12,9 @@ interface Prop {
 export const ChatTypeSelector: FC<Prop> = (props) => {
   const { data: session } = useSession();
   const { chatBody, onChatTypeChange } = useChatContext();
-  const [showFAQ, setShowFAQ] = useState(false);
   
-  useEffect(() => {
-    // 環境変数から直接読み込むか、セッション情報から判断
-    const faqEnabled = process.env.NEXT_PUBLIC_FAQ === 'True';
-    // セッション情報がある場合は、ユーザーの権限などに基づいて判断することも可能
-    // 例: const faqEnabled = session?.user?.isAdmin || false;
-    setShowFAQ(faqEnabled);
-  }, [session]);
+  // セッションからFAQの表示設定を取得
+  const showFAQ = session?.user?.showFAQ || false;
 
   return (
     <Tabs
@@ -47,7 +41,7 @@ export const ChatTypeSelector: FC<Prop> = (props) => {
           className="flex gap-1"
           disabled={props.disable}
         >
-          <FileText size={20} /> 文書要約　#{showFAQ}#
+          <FileText size={20} /> 文書要約
         </TabsTrigger>              
         {showFAQ && (
           <TabsTrigger

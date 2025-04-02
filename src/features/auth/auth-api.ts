@@ -9,6 +9,9 @@ const configureIdentityProvider = () => {
   const providers: Array<Provider> = [];
 
   const adminEmails = process.env.ADMIN_EMAIL_ADDRESS?.split(",").map(email => email.toLowerCase().trim());
+  
+  // FAQ表示設定を取得
+  const showFAQ = process.env.NEXT_PUBLIC_FAQ === 'True';
 
   if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
     providers.push(
@@ -18,7 +21,8 @@ const configureIdentityProvider = () => {
         async profile(profile) {
           const newProfile = {
             ...profile,
-            isAdmin: adminEmails?.includes(profile.email.toLowerCase())
+            isAdmin: adminEmails?.includes(profile.email.toLowerCase()),
+            showFAQ: showFAQ // FAQの表示設定を追加
           }
           return newProfile;
         }
@@ -43,7 +47,8 @@ const configureIdentityProvider = () => {
             // throws error without this - unsure of the root cause (https://stackoverflow.com/questions/76244244/profile-id-is-missing-in-google-oauth-profile-response-nextauth)
             id: profile.sub,
             //isAdmin: adminEmails?.includes(profile.email.toLowerCase()) || adminEmails?.includes(profile.preferred_username.toLowerCase())
-            isAdmin: adminEmails?.includes(profile.preferred_username.toLowerCase())
+            isAdmin: adminEmails?.includes(profile.preferred_username.toLowerCase()),
+            showFAQ: showFAQ // FAQの表示設定を追加
           }
           return newProfile;
         }
@@ -74,6 +79,7 @@ const configureIdentityProvider = () => {
               name: username,
               email: email,
               isAdmin: true,
+              showFAQ: showFAQ, // FAQの表示設定を追加
               image: "",
             };
           console.log("=== DEV USER LOGGED IN:\n", JSON.stringify(user, null, 2));
@@ -91,62 +97,57 @@ export const options: NextAuthOptions = {
   providers: [...configureIdentityProvider()],
   callbacks: {
     async jwt({token, user, account, profile, isNewUser, session}) {
-      if (user?.isAdmin) {
-       token.isAdmin = user.isAdmin
+      if (user) {
+        // ユーザー情報からトークンに値をコピー
+        if (user.isAdmin) {
+          token.isAdmin = user.isAdmin;
+        }
+        // FAQの表示設定をトークンに追加
+        token.showFAQ = user.showFAQ;
       }
-      return token
+      return token;
     },
     async session({session, token, user }) {
-      session.user.isAdmin = token.isAdmin as string
-      return session
+      // トークンからセッションにユーザー情報をコピー
+      session.user.isAdmin = token.isAdmin as string;
+      // FAQの表示設定をセッションに追加
+      session.user.showFAQ = token.showFAQ as boolean;
+      return session;
     }
   },
   session: {
     strategy: "jwt",
   },
  
-//  cookies: {
-//    sessionToken: {
-//      name: `__Secure-next-auth.session-token`,
-//      options: {
-//        httpOnly: true,
-//        sameSite: "none",
-//        secure: true
-//      },
-//    },
-//  },
-//  useSecureCookies: process.env.NODE_ENV === "production",
-
-
-cookies: {
-  sessionToken: {
-    name: `__Secure-next-auth.session-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        path: '/',
+        sameSite: 'none',
+        secure: true,
+      },
+    },
+    csrfToken: {
+      name: `__Host-next-auth.csrf-token`,
+      options: {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      },
     },
   },
-  callbackUrl: {
-    name: `__Secure-next-auth.callback-url`,
-    options: {
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-  csrfToken: {
-    name: `__Host-next-auth.csrf-token`,
-    options: {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    },
-  },
-},
 
- useSecureCookies: process.env.NODE_ENV === "production",
+  useSecureCookies: process.env.NODE_ENV === "production",
 };
 export const handlers = NextAuth(options);

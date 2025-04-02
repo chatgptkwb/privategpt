@@ -26,6 +26,7 @@ const azureEnvVars = [
   "AZURE_SPEECH_REGION",
   "AZURE_SPEECH_KEY",
   "PUBLIC_PUBLIC_SPEECH_ENABLED",
+  "NEXT_PUBLIC_FAQ"
 ] as const;
 
 type RequiredServerEnvKeys = (typeof azureEnvVars)[number];
